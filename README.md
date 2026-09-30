@@ -2,6 +2,23 @@
 
 Turns a few marketing photos (+ the hotel's published floor plan) into an interactive 3D room for the website.
 
+## Setup on a new PC
+1. **Git**: https://git-scm.com/download/win, then:
+   ```
+   git clone https://github.com/multivitamine/3drooms.git
+   cd 3drooms
+   ```
+2. **Python 3.11+**: https://www.python.org/downloads/ (tick "Add python.exe to PATH"), then:
+   ```
+   pip install pillow numpy
+   ```
+3. **Blender 4.5 LTS**: https://www.blender.org/download/lts/4-5/ (default install path).
+   If installed elsewhere, use that path to `blender.exe` in the build command below.
+4. Optional: an NVIDIA GPU speeds up renders/baking (Cycles uses OptiX/CUDA automatically, else CPU).
+
+Just viewing the room needs only Python (step 2 without the pip line) and a browser. See **Viewer** below.
+The finished model and lightmap are committed in `web/models/`, so no rebuild is needed.
+
 ## Pipeline
 1. `input/<room>/photos/`, `input/<room>/plan/`: source material.
 2. `specs/<room>.json`: the room written down: size, openings, furniture, colours, cameras.
