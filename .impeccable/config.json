@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "web/viewer.html"
+        ],
+        "createdAt": "2026-09-29T13:04:32.901Z",
+        "reason": "Claude decided: #faf5ed/#225372 are the hotel's own brand colours, taken from the fill values in its published floor-plan SVG (input/room-01/plan/cbh_plattegrond_beach_comfort_2.svg)"
+      }
+    ]
+  }
+}

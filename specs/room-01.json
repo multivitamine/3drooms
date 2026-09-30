@@ -1,0 +1,479 @@
+{
+  "id": "room-01",
+  "name": "Beach Comfort",
+  "hotel": "Carlton Beach Scheveningen",
+  "notes": [
+    "Units: metres. Z is up. x = room width (0 = mural/bed wall, W = bench/minibar wall). y = room depth (0 = entrance wall, D = window wall). Balcony is at y > D.",
+    "Scale estimated from the hotel's published floor plan (cbh_plattegrond_beach_comfort_2.svg) assuming a 180 cm bed: 1 m = 230 plan px at 4x render.",
+    "source: photo = seen in a photo; plan = only in the floor plan; invented = guessed. Draft policy: things no photo shows are left empty/closed."
+  ],
+  "room": {
+    "width": 3.3,
+    "depth": 5.88,
+    "height": 2.6,
+    "balcony_depth": 1.6,
+    "source": "plan"
+  },
+  "materials": {
+    "wall": {
+      "color": "#ECE6DB",
+      "roughness": 0.9
+    },
+    "ceiling": {
+      "color": "#F1EEE8",
+      "roughness": 0.95
+    },
+    "floor": {
+      "color": "#FFFFFF",
+      "texture": "floor_tiles.png",
+      "tex_size": 1.2,
+      "roughness": 0.6
+    },
+    "mural": {
+      "color": "#FFFFFF",
+      "texture": "mural.png",
+      "roughness": 0.8
+    },
+    "oak": {
+      "color": "#FFFFFF",
+      "texture": "oak.png",
+      "tex_size": 1.0,
+      "roughness": 0.55
+    },
+    "bed_base": {
+      "color": "#9A7E5E",
+      "roughness": 0.9
+    },
+    "linen": {
+      "color": "#F7F7F5",
+      "roughness": 0.95
+    },
+    "velvet_taupe": {
+      "color": "#8A7560",
+      "roughness": 0.8
+    },
+    "mustard": {
+      "color": "#C9962E",
+      "roughness": 0.85
+    },
+    "teal": {
+      "color": "#7FB0B8",
+      "roughness": 0.9
+    },
+    "curtain": {
+      "color": "#8C7864",
+      "roughness": 0.9
+    },
+    "sheer": {
+      "color": "#F4F5F4",
+      "roughness": 0.9,
+      "alpha": 0.55
+    },
+    "glass": {
+      "color": "#DDE8EC",
+      "roughness": 0.05,
+      "alpha": 0.12
+    },
+    "frame_white": {
+      "color": "#F2F2F0",
+      "roughness": 0.4
+    },
+    "black": {
+      "color": "#1E1E1E",
+      "roughness": 0.5
+    },
+    "brass": {
+      "color": "#C9A55A",
+      "roughness": 0.3,
+      "metallic": 1.0
+    },
+    "copper": {
+      "color": "#C07A4E",
+      "roughness": 0.35,
+      "metallic": 1.0
+    },
+    "rattan": {
+      "color": "#C8A574",
+      "roughness": 0.8
+    },
+    "rug": {
+      "color": "#FFFFFF",
+      "texture": "rug.png",
+      "roughness": 0.95
+    },
+    "sea_view": {
+      "color": "#FFFFFF",
+      "texture": "sea_view.png",
+      "emission": 1.2
+    },
+    "balcony_floor": {
+      "color": "#B9A58E",
+      "roughness": 0.9
+    },
+    "door": {
+      "color": "#FFFFFF",
+      "texture": "oak.png",
+      "tex_size": 1.0,
+      "roughness": 0.5
+    }
+  },
+  "openings": {
+    "window_wall": {
+      "source": "photo",
+      "sill": 0.0,
+      "head": 2.35,
+      "sliding_door": [
+        1.7,
+        2.5
+      ]
+    },
+    "entrance_door": {
+      "source": "plan",
+      "wall": "entrance",
+      "x": [
+        2.45,
+        3.3
+      ],
+      "height": 2.1
+    },
+    "bathroom": {
+      "source": "plan",
+      "x": [
+        0.0,
+        1.9
+      ],
+      "y": [
+        0.0,
+        1.75
+      ],
+      "door_y": [
+        0.2,
+        1.0
+      ],
+      "note": "closed box in draft; interior photo exists (kamer-5) for later"
+    },
+    "wardrobe": {
+      "source": "plan",
+      "x": [
+        1.9,
+        2.45
+      ],
+      "y": [
+        1.05,
+        1.75
+      ],
+      "note": "closed oak box in draft"
+    }
+  },
+  "items": [
+    {
+      "id": "mural",
+      "type": "mural",
+      "source": "photo",
+      "x": 0.0,
+      "y": [
+        1.85,
+        4.55
+      ],
+      "z": [
+        0.0,
+        2.6
+      ]
+    },
+    {
+      "id": "bed",
+      "type": "bed",
+      "source": "photo",
+      "x": [
+        0.02,
+        2.02
+      ],
+      "y": [
+        2.27,
+        4.07
+      ],
+      "note": "180x200, headboard-less, wooden base on black legs"
+    },
+    {
+      "id": "nightstand_l",
+      "type": "nightstand",
+      "source": "photo",
+      "x": [
+        0.0,
+        0.32
+      ],
+      "y": [
+        4.1,
+        4.42
+      ],
+      "z": 0.5
+    },
+    {
+      "id": "nightstand_r",
+      "type": "nightstand",
+      "source": "plan",
+      "x": [
+        0.0,
+        0.32
+      ],
+      "y": [
+        1.9,
+        2.22
+      ],
+      "z": 0.5
+    },
+    {
+      "id": "pendant_cage_l",
+      "type": "pendant_cage",
+      "source": "photo",
+      "pos": [
+        0.2,
+        4.26,
+        1.5
+      ]
+    },
+    {
+      "id": "pendant_cage_r",
+      "type": "pendant_cage",
+      "source": "plan",
+      "pos": [
+        0.2,
+        2.06,
+        1.5
+      ]
+    },
+    {
+      "id": "floor_lamp",
+      "type": "floor_lamp",
+      "source": "photo",
+      "pos": [
+        0.15,
+        4.64
+      ]
+    },
+    {
+      "id": "radiator",
+      "type": "radiator",
+      "source": "photo",
+      "x": [
+        0.0,
+        0.1
+      ],
+      "y": [
+        5.3,
+        5.75
+      ],
+      "z": [
+        0.1,
+        1.95
+      ]
+    },
+    {
+      "id": "armchair",
+      "type": "armchair",
+      "source": "photo",
+      "pos": [
+        0.75,
+        5.0
+      ],
+      "rot": 45
+    },
+    {
+      "id": "side_table",
+      "type": "side_table",
+      "source": "photo",
+      "pos": [
+        1.35,
+        5.4
+      ],
+      "diameter": 0.45,
+      "height": 0.62,
+      "color": "black"
+    },
+    {
+      "id": "plant_vase",
+      "type": "plant",
+      "source": "photo",
+      "pos": [
+        1.38,
+        5.4,
+        0.62
+      ]
+    },
+    {
+      "id": "rug",
+      "type": "rug",
+      "source": "photo",
+      "x": [
+        1.55,
+        2.95
+      ],
+      "y": [
+        2.5,
+        4.9
+      ]
+    },
+    {
+      "id": "side_table_white",
+      "type": "side_table",
+      "source": "photo",
+      "pos": [
+        2.45,
+        4.95
+      ],
+      "diameter": 0.4,
+      "height": 0.55,
+      "color": "frame_white",
+      "legs": "brass_tripod"
+    },
+    {
+      "id": "bench",
+      "type": "bench",
+      "source": "photo",
+      "x": [
+        2.81,
+        3.3
+      ],
+      "y": [
+        4.39,
+        5.46
+      ],
+      "height": 0.45
+    },
+    {
+      "id": "minibar_unit",
+      "type": "minibar_unit",
+      "source": "photo",
+      "x": [
+        2.81,
+        3.3
+      ],
+      "y": [
+        3.6,
+        4.39
+      ],
+      "height": 0.95
+    },
+    {
+      "id": "desk",
+      "type": "desk",
+      "source": "plan",
+      "x": [
+        3.0,
+        3.3
+      ],
+      "y": [
+        2.1,
+        3.6
+      ],
+      "height": 0.75
+    },
+    {
+      "id": "copper_pendant",
+      "type": "copper_pendant",
+      "source": "photo",
+      "wall_x": 3.3,
+      "y": 4.2,
+      "hang": [
+        2.95,
+        4.2,
+        1.75
+      ]
+    },
+    {
+      "id": "curtains",
+      "type": "curtains",
+      "source": "photo"
+    },
+    {
+      "id": "balcony",
+      "type": "balcony",
+      "source": "photo",
+      "note": "glass railing, 2 rattan chairs, small round table"
+    },
+    {
+      "id": "tv",
+      "type": "empty",
+      "source": "invented",
+      "note": "TV listed in facilities but not photographed - left out of draft"
+    }
+  ],
+  "cameras": {
+    "photo_kamer": {
+      "pos": [
+        2.7,
+        1.9,
+        1.45
+      ],
+      "look": [
+        0.8,
+        5.88,
+        0.9
+      ],
+      "lens": 16,
+      "note": "matches cbh-860x600-beach-comfort-kamer.webp"
+    },
+    "photo_kamer_2": {
+      "pos": [
+        2.0,
+        3.2,
+        1.1
+      ],
+      "look": [
+        0.3,
+        5.0,
+        0.9
+      ],
+      "lens": 28,
+      "note": "matches -kamer-2"
+    },
+    "photo_kamer_3": {
+      "pos": [
+        1.9,
+        5.75,
+        1.0
+      ],
+      "look": [
+        3.3,
+        4.8,
+        0.8
+      ],
+      "lens": 24,
+      "note": "matches -kamer-3"
+    },
+    "photo_kamer_4": {
+      "pos": [
+        1.0,
+        2.0,
+        1.2
+      ],
+      "look": [
+        2.0,
+        5.88,
+        1.0
+      ],
+      "lens": 20,
+      "note": "matches -kamer-4"
+    },
+    "dollhouse": {
+      "pos": [
+        5.2,
+        -1.2,
+        5.6
+      ],
+      "look": [
+        1.65,
+        3.3,
+        0.3
+      ],
+      "lens": 22,
+      "hide": [
+        "Ceiling",
+        "Wall_unit",
+        "Wall_entrance",
+        "Wall_entrance_top",
+        "Skirting_unit"
+      ]
+    }
+  }
+}

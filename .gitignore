@@ -1,0 +1,12 @@
+# Blender autosave/backup files
+*.blend1
+*.blend@
+
+# Stray media not part of the room inputs
+*.mp3
+
+# Python
+__pycache__/
+
+# Design-hook cache
+.impeccable/hook.cache.json

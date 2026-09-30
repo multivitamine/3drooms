@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Beach Comfort – 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #225372;
+    --cream: #faf5ed;
+    --ink: #1d2b36;
+    --glass: rgba(250, 245, 237, 0.88);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--cream); font-family: "DM Sans", system-ui, sans-serif; color: var(--ink); }
+  #app { position: fixed; inset: 0; touch-action: none; }
+  canvas { display: block; outline: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+
+  .title { position: absolute; top: 16px; left: 16px; padding: 10px 14px; background: var(--glass); border-radius: 10px; backdrop-filter: blur(6px); }
+  .title h1 { margin: 0; font-size: 17px; font-weight: 600; color: var(--navy); }
+  .title p { margin: 2px 0 0; font-size: 12px; opacity: .7; }
+
+  .bar { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(100% - 32px, 560px); }
+  .seg, .chips { display: flex; gap: 4px; padding: 4px; background: var(--glass); border-radius: 999px; backdrop-filter: blur(6px); flex-wrap: wrap; justify-content: center; }
+  button { font: inherit; font-size: 13px; border: 0; border-radius: 999px; padding: 8px 14px; background: transparent; color: var(--ink); cursor: pointer; }
+  button:hover { background: rgba(34, 83, 114, .08); }
+  button[aria-pressed="true"] { background: var(--navy); color: var(--cream); }
+  .chips[hidden] { display: none; }
+
+  .hint { position: absolute; top: 16px; right: 16px; font-size: 12px; padding: 8px 12px; background: var(--glass); border-radius: 8px; max-width: 220px; }
+
+  #loader { position: absolute; inset: 0; display: grid; place-items: center; background: var(--cream); transition: opacity .5s; z-index: 5; }
+  #loader.done { opacity: 0; pointer-events: none; }
+  .progress { width: 180px; height: 3px; background: rgba(34, 83, 114, .15); border-radius: 2px; overflow: hidden; margin-top: 10px; }
+  .progress i { display: block; height: 100%; width: 100%; background: var(--navy); transform: scaleX(0); transform-origin: left; transition: transform .2s; }
+  .loadtext { font-size: 13px; color: var(--navy); text-align: center; }
+
+  @media (max-width: 520px) {
+    .hint { display: none; }
+    button { padding: 7px 11px; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div class="title">
+  <h1>Beach Comfort</h1>
+  <p>3D preview · concept</p>
+</div>
+<div class="hint" id="hint">Drag to look around · tap a circle on the floor to walk there</div>
+
+<div class="bar">
+  <div class="chips" id="spots"></div>
+  <div class="seg" role="group" aria-label="View mode">
+    <button id="mode-look" aria-pressed="true">Look around</button>
+    <button id="mode-doll" aria-pressed="false">Dollhouse</button>
+  </div>
+</div>
+
+<div id="loader"><div><div class="loadtext">Loading room…</div><div class="progress"><i id="bar"></i></div></div></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const params = new URLSearchParams(location.search);
+const MODEL = params.get('model') || 'models/room-01.glb';
+
+// Room spec coordinates are Blender (x, y, z-up); glTF/three is (x, z, -y).
+const B = (x, y, z) => new THREE.Vector3(x, z, -y);
+const EYE = 1.6;
+const SPOTS = [
+  { name: 'Entrance', pos: [2.75, 2.0], look: [1.0, 5.9, 1.1] },
+  { name: 'Bed',      pos: [2.6, 3.0],  look: [0.0, 4.4, 1.0] },
+  { name: 'Window',   pos: [1.9, 5.2],  look: [2.2, 0.0, 1.2] },
+  { name: 'Balcony',  pos: [0.45, 6.4],  look: [1.6, 40, 1.4] },
+];
+const CENTER = B(1.65, 3.4, 0.6);
+
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.AgXToneMapping;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#eef1f2');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.03, 600);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+
+// Lighting. Preferred: lighting baked in Blender (lightmap next to the model, 2nd UV set).
+// Fallback: live sun + hemisphere + pendant lights with real-time shadows.
+const LIGHTMAP = params.get('lightmap') || MODEL.replace(/\.glb$/, '_lightmap.webp');
+const LIGHTMAP_SCALE = 4.0; // must match LIGHTMAP_SCALE in blender/build_room.py
+const liveLights = new THREE.Group();
+function addLiveLights() {
+  renderer.shadowMap.enabled = true;
+  renderer.toneMappingExposure = 1.45;
+  liveLights.add(new THREE.HemisphereLight('#fbf6ee', '#c9b59c', 1.1));
+  const sun = new THREE.DirectionalLight('#fff4e5', 2.2);
+  sun.position.copy(B(0.4, 14, 7));
+  sun.target.position.copy(B(1.65, 3.0, 0));
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -5, right: 5, top: 5, bottom: -5, near: 1, far: 30 });
+  sun.shadow.bias = -0.0004;
+  sun.shadow.normalBias = 0.02;
+  liveLights.add(sun, sun.target);
+  scene.add(liveLights);
+}
+
+function loadLightmap() {
+  if (params.get('lighting') === 'live') return Promise.resolve(null);
+  return new THREE.TextureLoader().loadAsync(LIGHTMAP).then((tex) => {
+    tex.flipY = false;
+    tex.channel = 1;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return tex;
+  }).catch(() => null);
+}
+
+// ---------------------------------------------------------------- load model
+const ceilingNames = /^(Ceiling|Balcony_slab_above|Sea_view)$/;
+const hideable = [];
+const floorTargets = [];
+const bar = document.getElementById('bar');
+
+const lightmapReady = loadLightmap();
+new GLTFLoader().load(MODEL, async (gltf) => {
+  const lightmap = await lightmapReady;
+  const baked = !!lightmap;
+  if (baked) {
+    renderer.toneMappingExposure = +(params.get('exposure') || 0.32);
+    scene.environmentIntensity = 0.7; // lights the unbaked bits: glass, metal, wire lamps
+  } else {
+    addLiveLights();
+  }
+  const root = gltf.scene;
+  root.traverse((o) => {
+    if (!o.isMesh) return;
+    let m = o.material;
+    const name = (m.name || '').toLowerCase();
+    if (baked && o.geometry.attributes.uv1) {
+      m = o.material = m.clone();
+      m.lightMap = lightmap;
+      m.lightMapIntensity = LIGHTMAP_SCALE * Math.PI;
+      m.envMapIntensity = 0.12; // keep a hint of reflection only
+    } else if (!baked) {
+      o.castShadow = !/glass|sheer|sea_view|mural|rug|glow/.test(name);
+      o.receiveShadow = true;
+    }
+    if (name === 'glass') {
+      Object.assign(m, { transparent: true, opacity: 0.1, depthWrite: false, roughness: 0.05 });
+    } else if (name === 'sheer') {
+      Object.assign(m, { transparent: true, opacity: 0.6, depthWrite: false, side: THREE.DoubleSide });
+      o.renderOrder = 2;
+    } else if (name === 'sea_view') {
+      o.material = new THREE.MeshBasicMaterial({ map: m.emissiveMap || m.map, toneMapped: false, side: THREE.DoubleSide });
+    } else if (/_glow$/.test(name) && !baked) {
+      const p = new THREE.PointLight('#ffc98a', 1.2, 4, 2);
+      o.getWorldPosition(p.position);
+      p.position.y -= 0.02;
+      liveLights.add(p);
+    }
+    if (ceilingNames.test(o.name)) hideable.push(o);
+    if (/^(Floor|Rug|Balcony_floor)$/.test(o.name)) floorTargets.push(o);
+  });
+  scene.add(root);
+  document.getElementById('loader').classList.add('done');
+  const startSpot = SPOTS[Math.min(+params.get('spot') || 0, SPOTS.length - 1)];
+  goTo(startSpot, true);
+  if (params.get('mode') === 'doll') { mode = 'doll'; applyMode(); animateTo(dollState(), true); }
+}, (e) => { if (e.total) bar.style.transform = `scaleX(${e.loaded / e.total})`; },
+(err) => { document.querySelector('.loadtext').textContent = 'Could not load the room model.'; console.error(err); });
+
+// ---------------------------------------------------------------- hotspots
+const markers = new THREE.Group();
+const ringMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.85, depthWrite: false });
+SPOTS.forEach((s, i) => {
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.2, 40), ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.copy(B(s.pos[0], s.pos[1], 0.012));
+  ring.userData.spot = i;
+  ring.renderOrder = 3;
+  markers.add(ring);
+});
+scene.add(markers);
+
+// ---------------------------------------------------------------- modes + transitions
+let mode = 'look';
+let current = 0;
+let anim = null;
+
+function lookState(s) {
+  const eye = B(s.pos[0], s.pos[1], EYE);
+  const dir = B(s.look[0], s.look[1], s.look[2]).sub(eye).normalize();
+  return { cam: eye, target: eye.clone().add(dir.multiplyScalar(0.01)) };
+}
+function dollState() {
+  return { cam: CENTER.clone().add(new THREE.Vector3(4.2, 6.2, 3.8)), target: CENTER.clone() };
+}
+function animateTo(state, instant) {
+  if (instant) {
+    camera.position.copy(state.cam); controls.target.copy(state.target); controls.update(); return;
+  }
+  anim = { from: { cam: camera.position.clone(), target: controls.target.clone() }, to: state, t0: performance.now(), dur: 900 };
+}
+function applyMode() {
+  const look = mode === 'look';
+  controls.enableZoom = !look;
+  controls.enablePan = false;
+  controls.rotateSpeed = look ? -0.35 : 0.8;
+  controls.minDistance = look ? 0 : 3;
+  controls.maxDistance = look ? Infinity : 14;
+  controls.minPolarAngle = look ? 0.35 : 0.1;
+  controls.maxPolarAngle = look ? Math.PI - 0.35 : Math.PI / 2.2;
+  camera.fov = look ? 70 : 40;
+  camera.updateProjectionMatrix();
+  hideable.forEach((o) => (o.visible = look));
+  markers.visible = look;
+  document.getElementById('mode-look').setAttribute('aria-pressed', look);
+  document.getElementById('mode-doll').setAttribute('aria-pressed', !look);
+  document.getElementById('spots').hidden = !look;
+  document.getElementById('hint').textContent = look
+    ? 'Drag to look around · tap a circle on the floor to walk there'
+    : 'Drag to rotate · scroll or pinch to zoom';
+}
+function goTo(spot, instant) {
+  current = SPOTS.indexOf(spot);
+  if (mode !== 'look') { mode = 'look'; applyMode(); }
+  animateTo(lookState(spot), instant);
+  [...document.querySelectorAll('#spots button')].forEach((b, i) => b.setAttribute('aria-pressed', i === current));
+}
+
+const spotsEl = document.getElementById('spots');
+SPOTS.forEach((s) => {
+  const b = document.createElement('button');
+  b.textContent = s.name;
+  b.onclick = () => goTo(s);
+  spotsEl.appendChild(b);
+});
+document.getElementById('mode-look').onclick = () => { if (mode !== 'look') { mode = 'look'; applyMode(); animateTo(lookState(SPOTS[current])); } };
+document.getElementById('mode-doll').onclick = () => { if (mode !== 'doll') { mode = 'doll'; applyMode(); animateTo(dollState()); } };
+applyMode();
+
+// Click (not drag) on a floor marker or floor = walk there, keeping the view direction.
+const ray = new THREE.Raycaster();
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => (down = [e.clientX, e.clientY]));
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down || mode !== 'look' || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+  const p = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(p, camera);
+  const hitMarker = ray.intersectObjects(markers.children)[0];
+  if (hitMarker) return goTo(SPOTS[hitMarker.object.userData.spot]);
+  const hitFloor = ray.intersectObjects(floorTargets)[0];
+  if (hitFloor) {
+    const dir = controls.target.clone().sub(camera.position);
+    const eye = hitFloor.point.clone(); eye.y = EYE;
+    animateTo({ cam: eye, target: eye.clone().add(dir) });
+  }
+});
+
+// Wheel in look mode = zoom by FOV.
+renderer.domElement.addEventListener('wheel', (e) => {
+  if (mode !== 'look') return;
+  camera.fov = THREE.MathUtils.clamp(camera.fov + e.deltaY * 0.03, 35, 85);
+  camera.updateProjectionMatrix();
+}, { passive: true });
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+renderer.setAnimationLoop((now) => {
+  if (anim) {
+    const t = Math.min(1, (now - anim.t0) / anim.dur), k = ease(t);
+    camera.position.lerpVectors(anim.from.cam, anim.to.cam, k);
+    controls.target.lerpVectors(anim.from.target, anim.to.target, k);
+    if (t === 1) anim = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
